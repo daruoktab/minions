@@ -1,6 +1,6 @@
 # --- Core UI & local execution ---
 ollama                    # local LLM runtime
-streamlit==1.42.2         # Streamlit UI (pinned)
+streamlit         # Streamlit UI (pinned)
 
 # --- Model provider SDKs ---
 openai                    # OpenAI client
