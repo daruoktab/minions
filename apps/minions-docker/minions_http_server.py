@@ -13,6 +13,7 @@ import json
 import traceback
 import time
 from datetime import datetime
+from pydantic import BaseModel
 
 # Import the full Minions class and core clients
 from minions.minions import Minions
@@ -80,7 +81,7 @@ config = {
     "local_provider": os.getenv("LOCAL_PROVIDER", "docker"),   # docker, openai (for local deployment)
 }
 
-def create_client(provider: str, model_name: str, is_local: bool = False) -> Any:
+def create_client(provider: str, model_name: str, is_local: bool = False, structured_output_schema: Optional[BaseModel] = None) -> Any:
     """Create a client based on the provider type."""
     
     if provider == "openai":
@@ -100,7 +101,8 @@ def create_client(provider: str, model_name: str, is_local: bool = False) -> Any
             model_name=model_name,
             base_url=config["local_base_url"],
             timeout=config["timeout"],
-            local=True
+            local=True,
+            structured_output_schema=structured_output_schema
         )
     
     else:
@@ -117,11 +119,17 @@ def create_minions_instance() -> Minions:
     logger.info(f"  Use retrieval: {config['use_retrieval']}")
     logger.info(f"  Retrieval model: {config['retrieval_model']}")
     
+    class StructuredLocalOutput(BaseModel):
+        explanation: str
+        citation: str | None
+        answer: str | None
+
     # Create local client
     local_client = create_client(
         provider=config["local_provider"],
         model_name=config["local_model_name"],
-        is_local=True
+        is_local=True,
+        structured_output_schema=StructuredLocalOutput
     )
     logger.info(f"Local client created: {local_client}")
     
@@ -536,4 +544,4 @@ if __name__ == '__main__':
         host=host,
         port=port,
         debug=os.getenv("DEBUG", "false").lower() == "true"
-    ) 
+    )
