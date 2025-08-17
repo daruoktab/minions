@@ -116,6 +116,9 @@ API_PRICES = {
         "deepseek-chat": {"input": 0.27, "cached_input": 0.07, "output": 1.10},
         "deepseek-reasoner": {"input": 0.27, "cached_input": 0.07, "output": 1.10},
     },
+    "Anthropic": {
+        "claude-opus-4-1-20250805": {"input": 15.00, "cached_input": 1.50, "output": 75.00},
+    },
     "Gemini": {
         "gemini-2.5-pro": {
             "input": 1.25,
@@ -625,6 +628,7 @@ def initialize_clients(
     multi_turn_mode=False,
     max_history_turns=0,
     context_description=None,
+    verbosity="medium",
 ):
     """Initialize the local and remote clients outside of the run_protocol function."""
     # Store model parameters in session state for potential reinitialization
@@ -832,6 +836,7 @@ def initialize_clients(
             temperature=remote_temperature,
             max_tokens=int(remote_max_tokens),
             api_key=api_key,
+            verbosity=verbosity,
         )
     elif provider == "Anthropic":
         # Get web search settings directly from session state
@@ -2415,6 +2420,7 @@ with st.sidebar:
         elif selected_provider == "Anthropic":
             model_mapping = {
                 "Claude 4 Opus (Recommended)": "claude-opus-4-20250514",
+                "Claude 4.1 Opus": "claude-opus-4-1-20250805",
                 "Claude 4 Sonnet (Recommended)": "claude-sonnet-4-20250514",
                 "claude-3-7-sonnet-latest (Recommended for web search)": "claude-3-7-sonnet-latest",
                 "claude-3-5-sonnet-latest": "claude-3-5-sonnet-latest",
@@ -2563,10 +2569,23 @@ with st.sidebar:
                 help="Controls how much effort the model puts into reasoning",
                 key="reasoning_effort",
             )
+            
+            # Add verbosity parameter for OpenRouter
+            if provider == "OpenRouter":
+                verbosity = st.selectbox(
+                    "Verbosity",
+                    options=["low", "medium", "high"],
+                    index=1,  # Default to "medium"
+                    help="Controls the verbosity and length of the model response",
+                    key="openrouter_verbosity",
+                )
+            else:
+                verbosity = "medium"  # Default for non-OpenRouter providers
         else:
             remote_temperature = 0.0
             remote_max_tokens = 4096
             reasoning_effort = "medium"  # Default reasoning effort
+            verbosity = "medium"  # Default verbosity
 
     voice_generation_enabled = False
 
@@ -2706,6 +2725,7 @@ if protocol == "DeepResearch":
             provider_key,
             num_ctx=4096,
             reasoning_effort=reasoning_effort,
+            verbosity=verbosity,
         )
 
         # Update session state
@@ -2973,6 +2993,7 @@ else:
                         reasoning_effort=reasoning_effort,
                         multi_turn_mode=multi_turn_mode,
                         max_history_turns=max_history_turns,
+                        verbosity=verbosity,
                     )
                     # Store the current protocol and local provider in session state
                     st.session_state.current_protocol = protocol
@@ -3105,7 +3126,7 @@ else:
                     # Display cost information for OpenAI models
                     if (
                         selected_provider
-                        in ["OpenAI", "AzureOpenAI", "DeepSeek", "LlamaAPI"]
+                        in ["OpenAI", "AzureOpenAI", "Anthropic", "DeepSeek", "LlamaAPI"]
                         and remote_model_name in API_PRICES[selected_provider]
                     ):
                         st.header("Remote Model Cost")
