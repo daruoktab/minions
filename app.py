@@ -106,6 +106,7 @@ API_PRICES = {
     "Grok": {
         "grok-2": {"input": 2.00, "cached_input": 1.00, "output": 10.00},
         "grok-3": {"input": 3.00, "cached_input": 1.50, "output": 15.00},
+        "grok-code-fast": {"input": 0.20 "cached_input": 0.02, "output": 1.5},
         "grok-3-fast": {"input": 5.00, "cached_input": 2.50, "output": 25.00},
         "grok-3-mini": {"input": 0.30, "cached_input": 0.15, "output": 0.50},
         "grok-4-0709": {"input": 4.00, "cached_input": 2.00, "output": 20.00},
@@ -647,6 +648,7 @@ def initialize_clients(
     max_history_turns=0,
     context_description=None,
     verbosity="medium",
+    conversation_id=None,
 ):
     """Initialize the local and remote clients outside of the run_protocol function."""
     # Store model parameters in session state for potential reinitialization
@@ -822,6 +824,7 @@ def initialize_clients(
             use_responses_api=use_responses_api,
             tools=tools,
             reasoning_effort=reasoning_effort,
+            conversation_id=conversation_id if conversation_id else None,
         )
     elif provider == "AzureOpenAI":
         # Get Azure-specific parameters from environment variables
@@ -1711,8 +1714,20 @@ with st.sidebar:
             value=False,
             help="When enabled, uses OpenAI's Responses API with web search capability. Only works with OpenAI provider.",
         )
+        
+        # Add conversation_id input when responses API is enabled
+        if use_responses_api:
+            conversation_id = st.text_input(
+                "Conversation ID (optional)",
+                value="",
+                help="Optional conversation ID for the Responses API to maintain context across multiple requests.",
+                key="conversation_id",
+            )
+        else:
+            conversation_id = None
     else:
         use_responses_api = False
+        conversation_id = None
 
     # Add a toggle for Anthropic web search when Anthropic is selected
     if selected_provider == "Anthropic":
@@ -2425,6 +2440,8 @@ with st.sidebar:
         elif selected_provider == "OpenRouter":
             model_mapping = {
                 "Qwen3 235B A22B 2507": "qwen/qwen3-235b-a22b-07-25:free",
+                "Hermes 4 70B": "nousresearch/hermes-4-70b",
+                "Hermes 4 405B": "nousresearch/hermes-4-405b",
                 "Horizon Beta": "openrouter/horizon-beta",
                 "Claude 3.5 Sonnet (Recommended)": "anthropic/claude-3.5-sonnet",
                 "claude 3.7 Sonnet Latest": "anthropic/claude-3-7-sonnet-latest",
@@ -2486,6 +2503,7 @@ with st.sidebar:
             model_mapping = {
                 "grok-4-0709 (Recommended)": "grok-4-0709",
                 "grok-3": "grok-3",
+                "grok-code-fast": "grok-code-fast-1",
                 "grok-3-fast": "grok-3-fast",
                 "grok-3-mini": "grok-3-mini",
                 "grok-2": "grok-2",
@@ -2753,6 +2771,7 @@ if protocol == "DeepResearch":
             num_ctx=4096,
             reasoning_effort=reasoning_effort,
             verbosity=verbosity,
+            conversation_id=conversation_id if selected_provider == "OpenAI" else None,
         )
 
         # Update session state
