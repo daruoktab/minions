@@ -1,10 +1,17 @@
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 import os
 import openai
 
 from minions.usage import Usage
 from minions.clients.base import MinionsClient
+
+try:
+    from perplexity import Perplexity
+except ImportError:
+    Perplexity = None
+
+
 
 
 class PerplexityAIClient(MinionsClient):
@@ -14,6 +21,9 @@ class PerplexityAIClient(MinionsClient):
         api_key: Optional[str] = None,
         temperature: float = 0.0,
         max_tokens: int = 4096,
+        search_receny_filter: Optional[str] = None,
+        search_after_date_filter: Optional[str] = None,
+        search_before_date_filter: Optional[str] = None,
         base_url: Optional[str] = None,
         **kwargs
     ):
@@ -47,6 +57,9 @@ class PerplexityAIClient(MinionsClient):
         self.client = openai.OpenAI(
             api_key=self.api_key, base_url=base_url
         )
+        self.search_receny_filter = search_receny_filter
+        self.search_after_date_filter = search_after_date_filter
+        self.search_before_date_filter = search_before_date_filter
 
     def chat(self, messages: List[Dict[str, Any]], **kwargs) -> Tuple[List[str], Usage]:
         """
@@ -117,6 +130,36 @@ class PerplexityAIClient(MinionsClient):
 
         # The content is now nested under message
         return [choice.message.content for choice in response.choices], usage
+
+    def search(self, query: Union[str, List[str]], **kwargs):
+        """
+        Perform a search using Perplexity's search capabilities.
+        
+        Args:
+            query: A single query string or list of query strings to search for
+            **kwargs: Additional arguments to pass to the search API
+            
+        Returns:
+            SearchResponse: Object containing search results with title and URL for each result
+        """
+        # Ensure query is a list
+        search_client = Perplexity(api_key=self.api_key)
+
+        if isinstance(query, str):
+            queries = [query]
+        else:
+            queries = query
+            
+        try:
+            search = search_client.search(query=queries, search_after_date_filter=self.search_after_date_filter, search_before_date_filter=self.search_before_date_filter, search_recent_filter=self.search_receny_filter, **kwargs)
+            results = search.results
+            return results
+            
+            
+        except Exception as e:
+            self.logger.error(f"Error during Perplexity search: {e}")
+            # Return empty results on error
+            return []
 
     @staticmethod
     def get_available_models():

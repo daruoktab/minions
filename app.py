@@ -83,33 +83,52 @@ st.markdown(
 )
 
 API_PRICES = {
-    # OpenAI model pricing per 1M tokens
+    # OpenAI model pricing per 1M tokens (Updated October 2025)
     "OpenAI": {
+        # GPT-4o Series
         "gpt-4o": {"input": 2.50, "cached_input": 1.25, "output": 10.00},
         "gpt-4o-mini": {"input": 0.15, "cached_input": 0.075, "output": 0.60},
-        "gpt-4.5-preview": {"input": 75.00, "cached_input": 37.50, "output": 150.00},
-        "o3-mini": {"input": 1.10, "cached_input": 0.55, "output": 4.40},
+        # GPT-4.5 Series
+        "gpt-4.5-preview": {"input": 1.50, "cached_input": 0.75, "output": 6.00},
+        # GPT-4.1 Series
+        "gpt-4.1": {"input": 3.00, "cached_input": 0.75, "output": 12.00},
+        "gpt-4.1-mini": {"input": 0.80, "cached_input": 0.20, "output": 3.20},
+        "gpt-4.1-nano": {"input": 0.20, "cached_input": 0.05, "output": 0.80},
+        # Reasoning Models (o-series)
         "o1": {"input": 15.00, "cached_input": 7.50, "output": 60.00},
         "o1-pro": {"input": 150.00, "cached_input": 7.50, "output": 600.00},
-        "gpt-4.1": {"input": 2.00, "cached_input": 0.50, "output": 8.00},
-        "gpt-4.1-mini": {"input": 0.40, "cached_input": 0.10, "output": 1.60},
-        "gpt-4.1-nano": {"input": 0.10, "cached_input": 0.025, "output": 0.40},
-        "o3": {"input": 10.0, "cached_input": 2.50, "output": 40.00},
-        "o4-mini": {"input": 1.10, "cached_input": 0.275, "output": 4.40},
-        # --- GPT-5 ---
+        "o3": {"input": 10.00, "cached_input": 2.50, "output": 40.00},
+        "o3-mini": {"input": 1.10, "cached_input": 0.55, "output": 4.40},
+        "o4-mini": {"input": 4.00, "cached_input": 1.00, "output": 16.00},
+        # GPT-5 Series
         "gpt-5": {"input": 1.25, "cached_input": 0.125, "output": 10.00},
+        "gpt-5-pro": {"input": 15.00, "cached_input": 7.50, "output": 120.00},
         "gpt-5-mini": {"input": 0.25, "cached_input": 0.025, "output": 2.00},
         "gpt-5-nano": {"input": 0.05, "cached_input": 0.005, "output": 0.40},
         "gpt-5-chat-latest": {"input": 1.25, "cached_input": 0.125, "output": 10.00},
     },
-    # Grok (xAI) model pricing per 1M tokens
+    # Grok (xAI) model pricing per 1M tokens (Updated Nov 2025)
     "Grok": {
         "grok-2": {"input": 2.00, "cached_input": 1.00, "output": 10.00},
-        "grok-3": {"input": 3.00, "cached_input": 1.50, "output": 15.00},
-        "grok-code-fast": {"input": 0.20 "cached_input": 0.02, "output": 1.5},
+        "grok-3": {"input": 3.00, "cached_input": 0.75, "output": 15.00},
         "grok-3-fast": {"input": 5.00, "cached_input": 2.50, "output": 25.00},
-        "grok-3-mini": {"input": 0.30, "cached_input": 0.15, "output": 0.50},
-        "grok-4-0709": {"input": 4.00, "cached_input": 2.00, "output": 20.00},
+        "grok-3-mini": {"input": 0.30, "cached_input": 0.075, "output": 0.50},
+        "grok-3-mini-fast": {"input": 0.30, "cached_input": 0.075, "output": 0.50},
+        "grok-4": {"input": 3.00, "cached_input": 0.75, "output": 15.00},
+        "grok-4-0709": {"input": 3.00, "cached_input": 0.75, "output": 15.00},
+        "grok-4-fast-reasoning": {"input": 0.20, "cached_input": 0.05, "output": 0.50},
+        "grok-4-fast-non-reasoning": {"input": 0.20, "cached_input": 0.05, "output": 0.50},
+        "grok-code-fast": {"input": 0.20, "cached_input": 0.02, "output": 1.5},
+        "grok-code-fast-1": {"input": 0.20, "cached_input": 0.02, "output": 1.50},
+    },
+    # Groq model pricing per 1M tokens
+    "Groq": {
+        "llama-3.1-8b-instant": {"input": 0.05, "cached_input": 0.025, "output": 0.08},
+        "llama-3.3-70b-versatile": {"input": 0.59, "cached_input": 0.295, "output": 0.79},
+        "meta-llama/llama-guard-4-12b": {"input": 0.20, "cached_input": 0.10, "output": 0.20},
+        "openai/gpt-oss-120b": {"input": 0.15, "cached_input": 0.075, "output": 0.75},
+        "openai/gpt-oss-20b": {"input": 0.10, "cached_input": 0.05, "output": 0.50},
+        "openai/gpt-oss-safeguard-20b": {"input": 0.10, "cached_input": 0.05, "output": 0.50},
     },
     # DeepSeek model pricing per 1M tokens
     "DeepSeek": {
@@ -117,8 +136,14 @@ API_PRICES = {
         "deepseek-chat": {"input": 0.27, "cached_input": 0.07, "output": 1.10},
         "deepseek-reasoner": {"input": 0.27, "cached_input": 0.07, "output": 1.10},
     },
+    # Novita AI pricing per 1M tokens
+    "Novita": {
+        "deepseek/deepseek-v3.1-terminus": {"input": 0.27, "cached_input": 0.27, "output": 1.00},
+        "moonshotai/kimi-k2-thinking": {"input": 0.60, "cached_input": 0.60, "output": 2.50},
+    },
     "Anthropic": {
         "claude-opus-4-1-20250805": {"input": 15.00, "cached_input": 1.50, "output": 75.00},
+        "claude-haiku-4-5-20251001": {"input": 1.00, "cached_input": 1.25, "output": 2.00},
     },
     "Gemini": {
         "gemini-2.5-pro": {
@@ -188,10 +213,17 @@ API_PRICES = {
             "cached_input": 1.00,
             "output": 6.00,
         },
+        # Exacto variants (enhanced tool-calling accuracy)
+        "moonshotai/kimi-k2-0905:exacto": {"input": 1.20, "cached_input": 0.30, "output": 1.20},
+        "deepseek/deepseek-v3.1-terminus:exacto": {"input": 0.27, "cached_input": 0.27, "output": 1.00},
+        "z-ai/glm-4.6:exacto": {"input": 0.50, "cached_input": 0.25, "output": 1.50},
+        "openai/gpt-oss-120b:exacto": {"input": 1.20, "cached_input": 0.30, "output": 1.20},
+        "qwen/qwen3-coder:exacto": {"input": 0.60, "cached_input": 0.15, "output": 0.60},
     },
     # Together AI model pricing per 1M tokens
     "Together": {
         "deepseek-ai/DeepSeek-R1-0528": {"input": 0.27, "cached_input": 0.07, "output": 1.10},
+        "Qwen/Qwen3-Next-80B-A3B-Thinking": {"input": 0.15, "cached_input": 0.15, "output": 1.50},
         "Qwen/Qwen3-235B-A22B-Instruct-2507-FP8": {"input": 1.20, "cached_input": 0.30, "output": 1.20},
         "chatgpt-oss-120b": {"input": 1.20, "cached_input": 0.30, "output": 1.20},
         "THUDM/GLM-4.5-Air": {"input": 0.20, "cached_input": 0.05, "output": 0.80},
@@ -207,6 +239,13 @@ API_PRICES = {
         "meta-llama/Llama-4-Scout": {"input": 1.09, "cached_input": 0.27, "output": 1.09},
         "google/Gemma-3-27B": {"input": 0.27, "cached_input": 0.07, "output": 0.27},
     },
+    # Ollama Turbo model pricing per 1M tokens
+    "Ollama": {
+        "gpt-oss:20b-cloud": {"input": 1.20, "cached_input": 0.30, "output": 1.20},
+        "gpt-oss:120b-cloud": {"input": 0.60, "cached_input": 0.15, "output": 0.60},
+        "deepseek-v3.1:671b-cloud": {"input": 0.20, "cached_input": 0.05, "output": 0.20},
+        "kimi-k2-thinking:cloud": {"input": 0.20, "cached_input": 0.05, "output": 0.20},
+    },
 }
 
 PROVIDER_TO_ENV_VAR_KEY = {
@@ -219,6 +258,8 @@ PROVIDER_TO_ENV_VAR_KEY = {
     "Groq": "GROQ_API_KEY",
     "Grok": "XAI_API_KEY",
     "DeepSeek": "DEEPSEEK_API_KEY",
+    "Novita": "NOVITA_API_KEY",
+    "Ollama": "OLLAMA_TURBO_API_KEY",
     "Firecrawl": "FIRECRAWL_API_KEY",
     "SERP": "SERPAPI_API_KEY",
     "SambaNova": "SAMBANOVA_API_KEY",
@@ -918,6 +959,14 @@ def initialize_clients(
             max_tokens=int(remote_max_tokens),
             api_key=api_key,
         )
+    elif provider == "Novita":
+        st.session_state.remote_client = OpenAIClient(
+            model_name=remote_model_name,
+            temperature=remote_temperature,
+            max_tokens=int(remote_max_tokens),
+            api_key=api_key,
+            base_url="https://api.novita.ai/openai",
+        )
     elif provider == "SambaNova":
         st.session_state.remote_client = SambanovaClient(
             model_name=remote_model_name,
@@ -951,6 +1000,13 @@ def initialize_clients(
         from minions.clients.qwen import QwenClient
 
         st.session_state.remote_client = QwenClient(
+            model_name=remote_model_name,
+            temperature=remote_temperature,
+            max_tokens=int(remote_max_tokens),
+            api_key=api_key,
+        )
+    elif provider == "Ollama":
+        st.session_state.remote_client = OllamaTurboClient(
             model_name=remote_model_name,
             temperature=remote_temperature,
             max_tokens=int(remote_max_tokens),
@@ -1438,7 +1494,7 @@ def validate_grok_key(api_key):
         from minions.clients.grok import GrokClient
 
         client = GrokClient(
-            model_name="grok-3-beta",  # Use a common model for testing
+            model_name="grok-4",  # Use the latest flagship model for testing
             api_key=api_key,
             temperature=0.0,
             max_tokens=1,
@@ -1454,6 +1510,23 @@ def validate_deepseek_key(api_key):
     try:
         client = DeepSeekClient(
             model_name="deepseek-chat", api_key=api_key, temperature=0.0, max_tokens=1
+        )
+        messages = [{"role": "user", "content": "Say yes"}]
+        client.chat(messages)
+        return True, ""
+    except Exception as e:
+        return False, str(e)
+
+
+def validate_novita_key(api_key):
+    try:
+        # Novita uses OpenAI-compatible API, so we can use OpenAI client with custom base URL
+        client = OpenAIClient(
+            model_name="deepseek/deepseek-v3.1-terminus",
+            api_key=api_key,
+            temperature=0.0,
+            max_tokens=1,
+            base_url="https://api.novita.ai/openai"
         )
         messages = [{"role": "user", "content": "Say yes"}]
         client.chat(messages)
@@ -1537,6 +1610,21 @@ def validate_qwen_key(api_key):
         return False, str(e)
 
 
+def validate_ollama_key(api_key):
+    try:
+        client = OllamaTurboClient(
+            model_name="gpt-oss:20b",
+            api_key=api_key,
+            temperature=0.0,
+            max_tokens=1,
+        )
+        messages = [{"role": "user", "content": "Say yes"}]
+        client.chat(messages)
+        return True, ""
+    except Exception as e:
+        return False, str(e)
+
+
 def validate_secure_endpoint(endpoint_url):
     """Validate secure endpoint by checking if it uses HTTPS and is reachable."""
     try:
@@ -1594,11 +1682,13 @@ with st.sidebar:
             "Groq",
             "Grok",
             "DeepSeek",
+            "Novita",
             "SambaNova",
             "Gemini",
             "LlamaAPI",
             "Sarvam",
             "Qwen",
+            "Ollama",
             "Secure",
         ]
         selected_provider = st.selectbox(
@@ -1659,6 +1749,8 @@ with st.sidebar:
             is_valid, msg = validate_grok_key(api_key)
         elif selected_provider == "DeepSeek":
             is_valid, msg = validate_deepseek_key(api_key)
+        elif selected_provider == "Novita":
+            is_valid, msg = validate_novita_key(api_key)
         elif selected_provider == "SambaNova":
             is_valid, msg = validate_sambanova_key(api_key)
         elif selected_provider == "Gemini":
@@ -1669,6 +1761,8 @@ with st.sidebar:
             is_valid, msg = validate_sarvam_key(api_key)
         elif selected_provider == "Qwen":
             is_valid, msg = validate_qwen_key(api_key)
+        elif selected_provider == "Ollama":
+            is_valid, msg = validate_ollama_key(api_key)
         elif selected_provider == "Secure":
             # For secure client, validate the endpoint instead of API key
             secure_endpoint_url = st.session_state.get(
@@ -2024,9 +2118,10 @@ with st.sidebar:
         "OpenRouter",
         "Anthropic",
         "DeepSeek",
+        "Novita",
         "SambaNova",
         "LlamaAPI",
-    ]:  # Added LlamaAPI and Anthropic to the list
+    ]:  # Added LlamaAPI, Anthropic, and Novita to the list
         # Currently Lemonade does not support Minion-CUA
         # TODO: Once the protocol support is added to the
         # Lemonade client, remove this check
@@ -2177,6 +2272,9 @@ with st.sidebar:
         if local_provider == "MLX":
             local_model_options = {
                 "SmolLM3-3B-8bit (Recommended)": "mlx-community/SmolLM3-3B-8bit",
+                "AI21-Jamba-Reasoning-3B-4bit": "mlx-community/AI21-Jamba-Reasoning-3B-4bit",
+                "LFM2-8B-A1B-8bit": "mlx-community/LFM2-8B-A1B-8bit",   
+                "GLM-4.5-Air-mxfp4": "mlx-community/GLM-4.5-Air-mxfp4",
                 "Qwen3-0.6B-MLX-4bit": "Qwen/Qwen3-0.6B-MLX-4bit",
                 "Qwen3-1.7B-MLX-bf16": "Qwen/Qwen3-1.7B-MLX-bf16",
                 "Qwen3-14B-MLX-8bit": "Qwen/Qwen3-14B-MLX-8bit",
@@ -2196,6 +2294,13 @@ with st.sidebar:
             }
         elif local_provider == "Transformers":
             local_model_options = {
+                "Jamba-Reasoning-3B": "ai21labs/AI21-Jamba-Reasoning-3B",
+                "RND1-Base-0910": "radicalnumerics/RND1-Base-0910",
+                "LFM2-8B-A1B": "LiquidAI/LFM2-8B-A1B",
+                "Jan-v1-Edge": "janhq/Jan-v1-edge",
+                "K2-Thinking": "LLM360/K2-Thinking",
+                "Ring-mini-2.0": "inclusionAI/Ring-mini-2.0",
+                "MobileLLM-R1-950M": "facebook/MobileLLM-R1-950M",
                 "MedGemma 4B (Recommended)": "google/medgemma-4b-it",
                 "SmallThinker-4BA0.6B-Instruct": "PowerInfer/SmallThinker-4BA0.6B-Instruct",
                 "MiniCPM4-8B": "openbmb/MiniCPM4-8B",
@@ -2220,23 +2325,16 @@ with st.sidebar:
             available_lemonade_models = lemonade.get_available_models()
             if protocol in ("Minions", "Minions-MCP", "DeepResearch"):
                 local_model_options = {
-                    "Qwen3-8B-GGUF": "Qwen3-8B-GGUF",
-                    "Qwen3-4B-GGUF": "Qwen3-4B-GGUF",
-                    "Qwen3-1.7B-GGUF": "Qwen3-1.7B-GGUF",
-                    "Qwen3-0.6B-GGUF": "Qwen3-0.6B-GGUF",
-                    "DeepSeek-Qwen3-8B-GGUF": "DeepSeek-Qwen3-8B-GGUF",
-                    "Gemma-3-4b-it-GGUF": "Gemma-3-4b-it-GGUF",
-                    "Qwen2.5-VL-7B-Instruct-GGUF": "Qwen2.5-VL-7B-Instruct-GGUF",
+                    "Qwen3-4B-Instruct-2507-GGUF (Recommended)": "Qwen3-4B-Instruct-2507-GGUF",
+                    "Qwen3-Coder-30B-A3B-Instruct-GGUF": "Qwen3-Coder-30B-A3B-Instruct-GGUF",
+                    "Gemma-3-4b-it-GGUF (Recommended)": "Gemma-3-4b-it-GGUF",
+                    "gpt-oss-120b-mxfp-GGUF": "gpt-oss-120b-mxfp-GGUF",
+                    "gpt-oss-20b-mxfp4-GGUF": "gpt-oss-20b-mxfp4-GGUF",
                 }
             else:
                 local_model_options = {
-                    "Llama-3.2-3B-Instruct-Hybrid": "Llama-3.2-3B-Instruct-Hybrid",
-                    "Qwen2.5-0.5B-Instruct-CPU": "Qwen2.5-0.5B-Instruct-CPU",
-                    "Llama-3.2-1B-Instruct-Hybrid": "Llama-3.2-1B-Instruct-Hybrid",
-                    "Phi-3-Mini-Instruct-Hybrid": "Phi-3-Mini-Instruct-Hybrid",
-                    "Qwen-1.5-7B-Chat-Hybrid": "Qwen-1.5-7B-Chat-Hybrid",
-                    "DeepSeek-R1-Distill-Llama-8B-Hybrid": "DeepSeek-R1-Distill-Llama-8B-Hybrid",
-                    "DeepSeek-R1-Distill-Qwen-7B-Hybrid": "DeepSeek-R1-Distill-Qwen-7B-Hybrid",
+                    "Qwen3-4B-Instruct-2507-FLM (Recommended)": "Qwen3-4B-Instruct-2507-FLM",
+                    "Gemma-3-4b-it-FLM (Recommended)": "Gemma-3-4b-it-FLM",
                 }
 
             # Add any additional available models from Lemonade that aren't in the default list
@@ -2275,6 +2373,10 @@ with st.sidebar:
             # Initialize with default model options
             local_model_options = {
                 "llama3.2 (Recommended)": "llama3.2",
+                "granite4 micro": "granite4:micro",
+                "granite4 micro-h": "granite4:micro-h",
+                "granite4 tiny-h": "granite4:tiny-h",
+                "granite4 small-h": "granite4:small-h",
                 "llama3.1:8b (Recommended)": "llama3.1:8b",
                 "gemma3n:e2b": "gemma3n:e2b",
                 "gemma3n:e4b": "gemma3n:e4b",
@@ -2362,6 +2464,7 @@ with st.sidebar:
                 "o1-pro": "o1-pro",
                 # GPT-5 family
                 "gpt-5": "gpt-5",
+                "gpt-5-pro": "gpt-5-pro-2025-10-06",
                 "gpt-5-mini": "gpt-5-mini",
                 "gpt-5-nano": "gpt-5-nano",
                 "gpt-5-chat-latest": "gpt-5-chat-latest",
@@ -2389,12 +2492,10 @@ with st.sidebar:
             # Initialize with default model options
             model_mapping = {
                 "gemini-2.5-pro (Recommended)": "gemini-2.5-pro",
-                "gemini-2.5-flash (Recommended)": "gemini-2.5-flash",
-                "gemini-2.5-flash-lite (Most cost-efficient)": "gemini-2.5-flash-lite",
+                "gemini-2.5-flash (Recommended)": "gemini-2.5-flash-preview-09-2025",
+                "gemini-2.5-flash-lite (Most cost-efficient)": "gemini-2.5-flash-lite-preview-09-2025",
                 "gemini-2.0-flash": "gemini-2.0-flash",
                 "gemini-2.0-pro": "gemini-2.0-pro",
-                "gemini-1.5-pro": "gemini-1.5-pro",
-                "gemini-1.5-flash": "gemini-1.5-flash",
             }
 
             # Add any additional available models from Gemini API that aren't in the default list
@@ -2415,30 +2516,25 @@ with st.sidebar:
             default_model_index = 0
         elif selected_provider == "SambaNova":
             model_mapping = {
-                "Meta-Llama-3.1-8B-Instruct (Recommended)": "Meta-Llama-3.1-8B-Instruct",
-                "DeepSeek-V3-0324": "DeepSeek-V3-0324",
-                "Meta-Llama-3.3-70B-Instruct": "Meta-Llama-3.3-70B-Instruct",
-                "Meta-Llama-3.1-405B-Instruct": "Meta-Llama-3.1-405B-Instruct",
-                "Meta-Llama-3.1-70B-Instruct": "Meta-Llama-3.1-70B-Instruct",
-                "Meta-Llama-3.2-3B-Instruct": "Meta-Llama-3.2-3B-Instruct",
-                "Meta-Llama-3.2-1B-Instruct": "Meta-Llama-3.2-1B-Instruct",
-                "Llama-3.2-90B-Vision-Instruct": "Llama-3.2-90B-Vision-Instruct",
-                "Llama-3.2-11B-Vision-Instruct": "Llama-3.2-11B-Vision-Instruct",
-                "Meta-Llama-Guard-3-8B": "Meta-Llama-Guard-3-8B",
-                "Llama-3.1-Tulu-3-405B": "Llama-3.1-Tulu-3-405B",
-                "Llama-3.1-Swallow-8B-Instruct-v0.3": "Llama-3.1-Swallow-8B-Instruct-v0.3",
-                "Llama-3.1-Swallow-70B-Instruct-v0.3": "Llama-3.1-Swallow-70B-Instruct-v0.3",
-                "DeepSeek-R1": "DeepSeek-R1",
+                # Reasoning Models
+                "gpt-oss-120b (Recommended)": "gpt-oss-120b",
+                "DeepSeek-R1-0528 (671B)": "DeepSeek-R1-0528",
                 "DeepSeek-R1-Distill-Llama-70B": "DeepSeek-R1-Distill-Llama-70B",
-                "E5-Mistral-7B-Instruct": "E5-Mistral-7B-Instruct",
-                "Qwen2.5-72B-Instruct": "Qwen2.5-72B-Instruct",
-                "Qwen2.5-Coder-32B-Instruct": "Qwen2.5-Coder-32B-Instruct",
-                "QwQ-32B": "QwQ-32B",
-                "Qwen2-Audio-7B-Instruct": "Qwen2-Audio-7B-Instruct",
+                "DeepSeek-V3.1": "DeepSeek-V3.1",
+                "DeepSeek-V3.1-Terminus": "DeepSeek-V3.1-Terminus",
+                "Qwen3-32B": "Qwen3-32B",
+                # Text Models
+                "DeepSeek-V3-0324 (671B)": "DeepSeek-V3-0324",
+                "Llama-3.3-Swallow-70B-Instruct-v0.4": "Llama-3.3-Swallow-70B-Instruct-v0.4",
+                "Meta-Llama-3.1-8B-Instruct (Recommended)": "Meta-Llama-3.1-8B-Instruct",
+                "Meta-Llama-3.3-70B-Instruct": "Meta-Llama-3.3-70B-Instruct",
             }
             default_model_index = 0
         elif selected_provider == "OpenRouter":
             model_mapping = {
+                "MiniMax-M2 (Recommended)": "minimax/minimax-m2:free",
+                "Qwen3 Max": "qwen/qwen3-max",
+                "grok-4-fast": "x-ai/grok-4-fast",
                 "Qwen3 235B A22B 2507": "qwen/qwen3-235b-a22b-07-25:free",
                 "Hermes 4 70B": "nousresearch/hermes-4-70b",
                 "Hermes 4 405B": "nousresearch/hermes-4-405b",
@@ -2450,22 +2546,28 @@ with st.sidebar:
                 "Mistral Large": "mistralai/mistral-large",
                 "Llama 3 70B": "meta-llama/llama-3-70b-instruct",
                 "Gemini 1.5 Pro": "google/gemini-1.5-pro",
+                # Exacto variants (enhanced tool-calling accuracy)
+                "Kimi K2 Exacto": "moonshotai/kimi-k2-0905:exacto",
+                "DeepSeek v3.1 Terminus Exacto": "deepseek/deepseek-v3.1-terminus:exacto",
+                "GLM 4.6 Exacto": "z-ai/glm-4.6:exacto",
+                "GPT-OSS 120B Exacto": "openai/gpt-oss-120b:exacto",
+                "Qwen3 Coder Exacto": "qwen/qwen3-coder:exacto",
             }
             default_model_index = 0
         elif selected_provider == "Anthropic":
             model_mapping = {
+                "Claude 4.5 Sonnet (Recommended)": " claude-sonnet-4-5",
+                "Claude 4.5 Haiku": "claude-haiku-4-5-20251001",
                 "Claude 4 Opus (Recommended)": "claude-opus-4-20250514",
                 "Claude 4.1 Opus": "claude-opus-4-1-20250805",
-                "Claude 4 Sonnet (Recommended)": "claude-sonnet-4-20250514",
+                "Claude 4 Sonnet": "claude-sonnet-4-20250514",
                 "claude-3-7-sonnet-latest (Recommended for web search)": "claude-3-7-sonnet-latest",
-                "claude-3-5-sonnet-latest": "claude-3-5-sonnet-latest",
-                "claude-3-5-haiku-latest": "claude-3-5-haiku-latest",
-                "claude-3-opus-latest": "claude-3-opus-latest",
             }
             default_model_index = 0
         elif selected_provider == "Together":
             model_mapping = {
                 "DeepSeek-R1-0528 (Recommended)": "deepseek-ai/DeepSeek-R1-0528",
+                "Qwen3-Next-80B-A3B-Thinking": "Qwen/Qwen3-Next-80B-A3B-Thinking",
                 "Qwen3 235B A22B Instruct 2507 FP8 (Recommended)": "Qwen/Qwen3-235B-A22B-Instruct-2507-FP8",
                 "GPT-OSS 120B": "chatgpt-oss-120b",
                 "GLM-4.5-Air": "THUDM/GLM-4.5-Air",
@@ -2476,7 +2578,7 @@ with st.sidebar:
                 "DeepSeek-R1": "deepseek-ai/DeepSeek-R1",
                 "Llama 3.3 70B": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
                 "QWQ-32B": "Qwen/QwQ-32B-Preview",
-                "Kimi K2 Instruct": "moonshot-ai/Kimi-K2-Instruct",
+                "Kimi K2 Instruct": "moonshotai/Kimi-K2-Instruct-0905",
                 "Llama 4 Maverick": "meta-llama/Llama-4-Maverick",
                 "Llama 4 Scout": "meta-llama/Llama-4-Scout",
                 "Gemma 3 27B": "google/Gemma-3-27B",
@@ -2493,19 +2595,24 @@ with st.sidebar:
             default_model_index = 0
         elif selected_provider == "Groq":
             model_mapping = {
-                "llama-3.3-70b-versatile (Recommended)": "llama-3.3-70b-versatile",
-                "llama-3.3-70b-specdec": "llama-3.3-70b-specdec",
-                "deepseek-r1-distill-llama-70b-specdec": "deepseek-r1-distill-llama-70b-specdec",
-                "qwen-2.5-32b": "qwen-2.5-32b",
+                "Llama 3.1 8B (Recommended)": "llama-3.1-8b-instant",
+                "Llama 3.3 70B": "llama-3.3-70b-versatile",
+                "Llama Guard 4 12B": "meta-llama/llama-guard-4-12b",
+                "GPT OSS 120B": "openai/gpt-oss-120b",
+                "GPT OSS 20B": "openai/gpt-oss-20b",
             }
             default_model_index = 0
         elif selected_provider == "Grok":
             model_mapping = {
-                "grok-4-0709 (Recommended)": "grok-4-0709",
+                "grok-4 (Recommended)": "grok-4",
+                "grok-4-0709": "grok-4-0709",
+                "grok-4-fast-reasoning (Most cost-efficient reasoning)": "grok-4-fast-reasoning",
+                "grok-4-fast-non-reasoning": "grok-4-fast-non-reasoning",
+                "grok-code-fast-1 (Optimized for coding)": "grok-code-fast-1",
                 "grok-3": "grok-3",
-                "grok-code-fast": "grok-code-fast-1",
                 "grok-3-fast": "grok-3-fast",
                 "grok-3-mini": "grok-3-mini",
+                "grok-3-mini-fast": "grok-3-mini-fast",
                 "grok-2": "grok-2",
             }
             default_model_index = 0
@@ -2513,6 +2620,14 @@ with st.sidebar:
             model_mapping = {
                 "deepseek-chat (Recommended)": "deepseek-chat",
                 "deepseek-reasoner": "deepseek-reasoner",
+            }
+            default_model_index = 0
+        elif selected_provider == "Novita":
+            model_mapping = {
+                "Kimi K2 Thinking (Recommended - Reasoning)": "moonshotai/kimi-k2-thinking",
+                "GLM 4.6": "zai-org/glm-4.6",
+                "Deepseek V3.2 Exp": "deepseek/deepseek-v3.2-exp",
+                "Deepseek V3.1 Terminus": "deepseek/deepseek-v3.1-terminus",
             }
             default_model_index = 0
         elif selected_provider == "LlamaAPI":
@@ -2532,10 +2647,22 @@ with st.sidebar:
             default_model_index = 0
         elif selected_provider == "Qwen":
             model_mapping = {
-                "qwen-plus (Recommended)": "qwen-plus",
+                "qwen3-max (Recommended)": "qwen3-max",
+                "qwen-plus": "qwen-plus",
                 "qwen3-coder-plus": "qwen3-coder-plus",
                 "qwen-max": "qwen-max",
                 "qwen3-235b-a22b-instruct-2507": "qwen3-235b-a22b-instruct-2507",
+            }
+            default_model_index = 0
+        elif selected_provider == "Ollama":
+            model_mapping = {
+                "kimi-k2-thinking:cloud": "kimi-k2-thinking:cloud",
+                "qwen3-vl:235b-cloud": "qwen3-vl:235b-cloud",
+                "kimi-k2:1t-cloud": "kimi-k2:1t-cloud",
+                "deepseek-v3.1:671b": "deepseek-v3.1:671b-cloud",
+                "gpt-oss:120b-cloud": "gpt-oss:120b-cloud",
+                "qwen3-coder:480b-cloud": "qwen3-coder:480b-cloud",
+                "minimax-m2:cloud": "minimax-m2:cloud",
             }
             default_model_index = 0
         elif selected_provider == "Secure":
@@ -3172,7 +3299,7 @@ else:
                     # Display cost information for supported providers
                     if (
                         selected_provider
-                        in ["OpenAI", "AzureOpenAI", "Anthropic", "DeepSeek", "LlamaAPI", "Together"]
+                        in ["OpenAI", "AzureOpenAI", "Anthropic", "DeepSeek", "Novita", "LlamaAPI", "Together", "Ollama", "Groq"]
                         and remote_model_name in API_PRICES[selected_provider]
                     ):
                         st.header("Remote Model Cost")

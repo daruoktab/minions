@@ -1,5 +1,6 @@
 from minions.clients.base import MinionsClient
 from minions.clients.ollama import OllamaClient, OllamaTurboClient
+from minions.clients.osaurus import OsaurusClient
 from minions.clients.lemonade import LemonadeClient
 from minions.clients.openai import OpenAIClient
 from minions.clients.azure_openai import AzureOpenAIClient
@@ -15,20 +16,24 @@ from minions.clients.sambanova import SambanovaClient
 from minions.clients.moonshot import MoonshotClient
 from minions.clients.gemini import GeminiClient
 from minions.clients.grok import GrokClient
-from minions.clients.llama_api import LlamaApiClient
 from minions.clients.mistral import MistralClient
+from minions.clients.minimax import MiniMaxClient
 from minions.clients.sarvam import SarvamClient
 from minions.clients.docker_model_runner import DockerModelRunnerClient
 from minions.clients.lemonade import LemonadeClient
 from minions.clients.distributed_inference import DistributedInferenceClient
 from minions.clients.novita import NovitaClient
+from minions.clients.parallel import ParallelClient
 from minions.clients.tencent import TencentClient
 from minions.clients.cloudflare import CloudflareGatewayClient
 from minions.clients.notdiamond import NotDiamondAIClient
+from minions.clients.vercel_gateway import VercelGatewayClient
+from minions.clients.exa import ExaClient
 
 __all__ = [
     "OllamaClient",
     "OllamaTurboClient",
+    "OsaurusClient",
     "LemonadeClient",
     "OpenAIClient",
     "AzureOpenAIClient",
@@ -44,15 +49,18 @@ __all__ = [
     "MoonshotClient",
     "GeminiClient",
     "GrokClient",
-    "LlamaApiClient",
     "MistralClient",
+    "MiniMaxClient",
     "SarvamClient",
     "DockerModelRunnerClient",
     "DistributedInferenceClient",
     "NovitaClient",
+    "ParallelClient",
     "TencentClient",
     "CloudflareGatewayClient",
-    "NotDiamondAIClient"
+    "NotDiamondAIClient",
+    "VercelGatewayClient",
+    "ExaClient",
 ]
 
 try:

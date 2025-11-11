@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 
 try:
-    from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModel, AutoProcessor, AutoModelForImageTextToText
 except ImportError:
     print(
         "WARNING: Transformers is not installed. Please install it with `pip install transformers`."
@@ -49,6 +49,8 @@ class TransformersClient(MinionsClient):
     - Support for LoRA adapters and PEFT models
     - Special support for NVIDIA Nemotron models with reasoning control
     - Special support for Hunyuan models with thinking mode
+    - Special support for ServiceNow Apriel models with text-only reasoning
+    - Special support for Facebook MobileLLM models with subfolder versions
     - Hardware-optimized inference (CUDA/MPS/CPU)
     - Tool calling and embedding support
     - Vision support for Apple FastVLM models (single-image VLM chat)
@@ -62,6 +64,18 @@ class TransformersClient(MinionsClient):
     Hunyuan Models:
     - Chain-of-Thought reasoning with <think> and <answer> tags
     - Access thinking process via get_thinking_content()
+    
+    Apriel Models:
+    - Reasoning model with extended thinking capabilities (ServiceNow-AI/Apriel-1.5-15b-Thinker)
+    - Text-only input support
+    - Reasoning with [BEGIN FINAL RESPONSE] and [END FINAL RESPONSE] tags
+    - Access thinking process via get_thinking_content()
+    
+    MobileLLM Models:
+    - Automatic detection of MobileLLM models (facebook/MobileLLM-*)
+    - Support for multiple versions via subfolder parameter ("base" or "instruct")
+    - Defaults to "instruct" version if not specified
+    - Optimized for on-device deployment
     
     Example usage with Nemotron:
         client = TransformersClient(
@@ -78,6 +92,20 @@ class TransformersClient(MinionsClient):
             reasoning_enabled=True,
             reasoning_budget=1000
         )
+    
+    Example usage with MobileLLM:
+        # Uses instruct version by default
+        client = TransformersClient(
+            model_name="facebook/MobileLLM-Pro"
+        )
+        
+        # Or explicitly specify the version
+        client = TransformersClient(
+            model_name="facebook/MobileLLM-Pro",
+            subfolder="instruct"  # or "base"
+        )
+        
+        response = client.chat([{"role": "user", "content": "Why are open-source models great?"}])
     """
     def __init__(
         self,
@@ -94,6 +122,7 @@ class TransformersClient(MinionsClient):
         enable_thinking: bool = False,  # for qwen and hunyuan models
         reasoning_enabled: bool = True,  # for nemotron models
         reasoning_budget: Optional[int] = None,  # for nemotron models
+        subfolder: Optional[str] = None,  # for models with subfolders (e.g., MobileLLM)
         local: bool = True,
         **kwargs
     ):
@@ -121,6 +150,8 @@ class TransformersClient(MinionsClient):
                 Controls whether /think or /no_think is added to system prompts for Nemotron models.
             reasoning_budget: Maximum tokens allowed for reasoning (Nemotron models only, default: None)
                 Limits the number of "thinking" tokens the model can use before providing final answer.
+            subfolder: Optional subfolder path for models with multiple versions (default: None)
+                For MobileLLM models, use "base" or "instruct". Example: "facebook/MobileLLM-Pro" with subfolder="instruct"
             **kwargs: Additional parameters passed to base class
         """
         super().__init__(
@@ -141,17 +172,36 @@ class TransformersClient(MinionsClient):
         self.embedding_model_name = embedding_model
         self.enable_thinking = enable_thinking
         
+        # Model-specific detection
+        self.is_mobilellm = self._is_mobilellm_model(model_name)
+        
+        # Auto-set subfolder for MobileLLM if not specified
+        if self.is_mobilellm and subfolder is None:
+            subfolder = "instruct"  # Default to instruct version
+            self.logger.info(f"MobileLLM detected, defaulting to subfolder: {subfolder}")
+        
+        self.subfolder = subfolder
+        
         # Nemotron-specific configuration
         self.reasoning_enabled = reasoning_enabled
         self.reasoning_budget = reasoning_budget
         self.is_nemotron = self._is_nemotron_model(model_name)
         self.is_fastvlm = self._is_fastvlm_model(model_name)
+        self.is_apriel = self._is_apriel_model(model_name)
+        
+        if self.is_mobilellm:
+            self.logger.info(f"Detected MobileLLM model: {model_name}")
+            self.logger.info(f"Using subfolder: {self.subfolder}")
         
         if self.is_nemotron:
             self.logger.info(f"Detected Nemotron model: {model_name}")
             self.logger.info(f"Reasoning enabled: {reasoning_enabled}")
             if reasoning_budget:
                 self.logger.info(f"Reasoning budget: {reasoning_budget} tokens")
+        
+        if self.is_apriel:
+            self.logger.info(f"Detected Apriel model: {model_name}")
+            self.logger.info("Apriel model supports vision-language and reasoning capabilities")
 
         # Check device availability
         self.device, self.dtype = self._get_device_and_dtype()
@@ -160,8 +210,11 @@ class TransformersClient(MinionsClient):
         # Authenticate with Hugging Face if token is provided
         self._authenticate_huggingface()
 
-        # Load model and tokenizer
-        self.model, self.tokenizer = self._build_model_and_tokenizer()
+        # Load model and tokenizer/processor
+        if self.is_apriel:
+            self.model, self.tokenizer = self._build_apriel_model_and_processor()
+        else:
+            self.model, self.tokenizer = self._build_model_and_tokenizer()
 
         # Load embedding model if specified
         self.embedding_model = None
@@ -169,10 +222,18 @@ class TransformersClient(MinionsClient):
         if self.embedding_model_name:
             self._load_embedding_model()
 
-        # Store last Hunyuan thinking content for access via get_thinking_content()
+        # Store last thinking content for access via get_thinking_content()
         self._last_hunyuan_thinking = ""
+        self._last_apriel_thinking = ""
 
         self.logger.info(f"Loaded Hugging Face model: {self.model_name}")
+
+    def _is_mobilellm_model(self, model_name: str) -> bool:
+        """
+        Detect Facebook MobileLLM models which use subfolders for different versions.
+        """
+        name = (model_name or "").lower()
+        return "mobilellm" in name or "facebook/mobilellm" in name
 
     def _is_fastvlm_model(self, model_name: str) -> bool:
         """
@@ -180,6 +241,13 @@ class TransformersClient(MinionsClient):
         """
         name = (model_name or "").lower()
         return "fastvlm" in name or "apple/fastvlm" in name
+    
+    def _is_apriel_model(self, model_name: str) -> bool:
+        """
+        Detect ServiceNow Apriel models which use AutoModelForImageTextToText.
+        """
+        name = (model_name or "").lower()
+        return "apriel" in name or "servicenow" in name and "apriel" in name
 
     def _is_hunyuan_model(self) -> bool:
         """
@@ -300,12 +368,15 @@ class TransformersClient(MinionsClient):
 
     def get_thinking_content(self) -> str:
         """
-        Get the thinking content from the last Hunyuan model response.
+        Get the thinking content from the last model response that supports reasoning.
         
         Returns:
-            str: The thinking content extracted from <think> tags, empty string if none
+            str: The thinking content extracted from reasoning models (Hunyuan or Apriel), empty string if none
         """
-        return self._last_hunyuan_thinking
+        if self.is_apriel:
+            return self._last_apriel_thinking
+        else:
+            return self._last_hunyuan_thinking
 
     def set_reasoning_enabled(self, enabled: bool) -> None:
         """
@@ -524,7 +595,10 @@ class TransformersClient(MinionsClient):
 
                 # First load the tokenizer from the base model
                 tokenizer = AutoTokenizer.from_pretrained(
-                    base_model_name, token=self.hf_token
+                    base_model_name, 
+                    token=self.hf_token,
+                    subfolder=self.subfolder,
+                    trust_remote_code=True
                 )
 
                 # Add pad token if it doesn't exist
@@ -560,7 +634,12 @@ class TransformersClient(MinionsClient):
             # Original code path for loading a full model
             # First load the tokenizer
 
-            tokenizer = AutoTokenizer.from_pretrained(ckpt_path, token=self.hf_token)
+            tokenizer = AutoTokenizer.from_pretrained(
+                ckpt_path, 
+                token=self.hf_token,
+                subfolder=self.subfolder,
+                trust_remote_code=True
+            )
 
             # Add pad token if it doesn't exist
             if tokenizer.pad_token is None:
@@ -572,6 +651,7 @@ class TransformersClient(MinionsClient):
                 torch_dtype=self.dtype,
                 device_map="auto" if use_device_map else None,
                 token=self.hf_token,
+                subfolder=self.subfolder,
                 trust_remote_code=True,
             )
 
@@ -597,6 +677,126 @@ class TransformersClient(MinionsClient):
         self.logger.info(f"Model is on device: {device_info}")
 
         return model, tokenizer
+
+    def _build_apriel_model_and_processor(self):
+        """
+        Build and return the Apriel model and processor.
+        Apriel models use AutoModelForImageTextToText and AutoProcessor.
+
+        Returns:
+            tuple: (model, processor)
+        """
+        ckpt_path = self.model_name
+        self.logger.info(f"Loading Apriel model from {ckpt_path}...")
+
+        # If it's an HF model with the prefix, remove the prefix
+        if ckpt_path.startswith("hf://"):
+            ckpt_path = ckpt_path[5:]
+
+        try:
+            # Load the processor
+            processor = AutoProcessor.from_pretrained(ckpt_path, token=self.hf_token)
+            
+            # Load the model using AutoModelForImageTextToText
+            model = AutoModelForImageTextToText.from_pretrained(
+                ckpt_path,
+                torch_dtype=self.dtype,
+                device_map="auto" if self.device in ["cuda", "mps"] else None,
+                token=self.hf_token,
+                trust_remote_code=True,
+            )
+
+            # Move model to device if device_map wasn't used
+            if self.device not in ["cuda", "mps"] or not isinstance(
+                getattr(model, "hf_device_map", None), dict
+            ):
+                self.logger.info(f"Moving model to {self.device} device")
+                model = model.to(self.device)
+
+            # Set model to eval mode
+            model.eval()
+
+            # Log model device information
+            self.logger.info(f"Model device map: {getattr(model, 'hf_device_map', None)}")
+            self.logger.info(f"Is CUDA available: {torch.cuda.is_available()}")
+            if hasattr(torch, "mps"):
+                self.logger.info(f"Is MPS available: {torch.backends.mps.is_available()}")
+            device_info = next(model.parameters()).device
+            self.logger.info(f"Model is on device: {device_info}")
+
+            return model, processor
+
+        except Exception as e:
+            self.logger.error(f"Error loading Apriel model: {str(e)}")
+            raise
+
+    def _convert_messages_to_apriel_format(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Convert standard message format to Apriel format with content as list of dicts.
+        Text-only version.
+        
+        Args:
+            messages: Standard message format
+            
+        Returns:
+            Converted messages in Apriel format
+        """
+        apriel_messages = []
+        
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            
+            # Build content list
+            content_list = []
+            
+            # Add text content
+            if isinstance(content, str):
+                content_list.append({"type": "text", "text": content})
+            elif isinstance(content, list):
+                # Content is already in list format, use it directly
+                for item in content:
+                    if isinstance(item, dict):
+                        content_list.append(item)
+                    else:
+                        content_list.append({"type": "text", "text": str(item)})
+            
+            apriel_messages.append({
+                "role": role,
+                "content": content_list
+            })
+        
+        return apriel_messages
+
+    def _parse_apriel_response(self, completion_text: str) -> Dict[str, str]:
+        """
+        Parse Apriel model response to extract thinking content and final answer.
+        
+        Args:
+            completion_text: Raw completion text from the model
+            
+        Returns:
+            Dict containing 'thinking', 'answer', and 'full_response' keys
+        """
+        import re
+        
+        result = {
+            'thinking': '',
+            'answer': '',
+            'full_response': completion_text
+        }
+        
+        # Extract final response
+        answer_pattern = r'\[BEGIN FINAL RESPONSE\](.*?)\[END FINAL RESPONSE\]'
+        answer_matches = re.findall(answer_pattern, completion_text, re.DOTALL)
+        if answer_matches:
+            result['answer'] = answer_matches[0].strip()
+            # Everything before the final response is thinking
+            thinking_end = completion_text.find('[BEGIN FINAL RESPONSE]')
+            if thinking_end > 0:
+                result['thinking'] = completion_text[:thinking_end].strip()
+        
+        return result
 
     def complete(
         self, prompts: Union[str, List[str]], **kwargs
@@ -775,7 +975,28 @@ class TransformersClient(MinionsClient):
             # Prepare inputs, including FastVLM vision path if applicable
             px = None  # pixel values for image if any
 
-            if self.is_fastvlm:
+            if self.is_apriel:
+                # Special handling for Apriel models (text-only)
+                apriel_messages = self._convert_messages_to_apriel_format(prepared_messages)
+                
+                # Apply chat template for text-only case
+                inputs = self.tokenizer.apply_chat_template(
+                    apriel_messages,
+                    add_generation_prompt=True,
+                    tokenize=True,
+                    return_dict=True,
+                    return_tensors="pt"
+                )
+                inputs = {k: v.to(self.model.device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
+                
+                # Remove token_type_ids if present (not needed for generation)
+                inputs.pop("token_type_ids", None)
+                
+                input_ids = inputs.get('input_ids')
+                prompt_token_count = input_ids.shape[1]
+                usage.prompt_tokens += prompt_token_count
+                
+            elif self.is_fastvlm:
                 # For FastVLM, if an image is present, we must splice in the <image> token
                 pil_img = self._extract_first_image(prepared_messages)
                 if pil_img is not None:
@@ -901,7 +1122,13 @@ class TransformersClient(MinionsClient):
                 if "max_thinking_tokens" in prepared_kwargs:
                     generation_kwargs["max_thinking_tokens"] = prepared_kwargs["max_thinking_tokens"]
                 
-                if px is not None:
+                if self.is_apriel:
+                    # For Apriel, pass the full inputs dict
+                    gen_out = self.model.generate(
+                        **inputs,
+                        **generation_kwargs
+                    )
+                elif px is not None:
                     gen_out = self.model.generate(
                         inputs=input_ids,
                         images=px,
@@ -940,6 +1167,18 @@ class TransformersClient(MinionsClient):
 
                 # If we're left with nothing after removing prefixes, use the original text
                 completion_text = cleaned_text if cleaned_text else completion_text
+                
+                # Handle Apriel model special thinking format
+                if self.is_apriel:
+                    apriel_parsed = self._parse_apriel_response(completion_text)
+                    # Store thinking content for later access
+                    self._last_apriel_thinking = apriel_parsed['thinking']
+                    # Use the answer content as the main response if available
+                    if apriel_parsed['answer']:
+                        completion_text = apriel_parsed['answer']
+                    # If no answer tags found, use the full response
+                    elif not apriel_parsed['answer']:
+                        self.logger.warning("No [BEGIN FINAL RESPONSE] tags found in Apriel output")
                 
                 # Handle Hunyuan model special thinking format
                 hunyuan_parsed = None
